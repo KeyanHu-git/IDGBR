@@ -1,0 +1,8 @@
+{
+  "_class_name": "LabelEmbedNet",
+  "_diffusers_version": "0.30.3",
+  "_name_or_path": "/opt/data/private/code/rs_seg_diffusion_large1/testgen626_final/weight/labelembednet2",
+  "bit_scale": 1,
+  "label_emb_inchannels": 3,
+  "num_classes": 2
+}

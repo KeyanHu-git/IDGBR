@@ -1,0 +1,13 @@
+type: "I2SDataset"
+num_classes: 2
+load_rough: true
+train: true
+pipeline:
+  - type: "ResizeI2S"
+    size: 512
+  - type: "ToTensorI2S"
+  - type: "NormalizeImage"
+    mean: [0.485, 0.456, 0.406]
+    std: [0.229, 0.224, 0.225]
+  - type: "ToLongTensorI2S"
+    keys: ["label_index", "rough_label_index"]

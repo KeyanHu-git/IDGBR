@@ -1,0 +1,31 @@
+--extra-index-url https://download.pytorch.org/whl/cu117
+
+torch==2.0.1+cu117
+torchvision==0.15.2
+accelerate==1.1.1
+diffusers==0.30.3
+transformers==4.46.3
+huggingface_hub==0.36.2
+safetensors==0.4.4
+numpy==1.24.4
+Pillow==10.4.0
+PyYAML==6.0.1
+tqdm==4.65.2
+packaging==24.1
+opencv-python==4.10.0.84
+scipy==1.14.1
+bitsandbytes==0.44.1
+tensorboard==2.18.0
+xformers==0.0.21
+wandb==0.18.0
+
+# Vendored DINOv2 / OpenMMLab dependencies shipped in this release.
+# They are installed by default so the full repository imports cleanly.
+omegaconf==2.3.0
+fvcore==0.1.5.post20221221
+iopath==0.1.10
+torchmetrics==1.4.1
+submitit==1.5.4
+mmcv-full==1.5.0
+mmcls==0.25.0
+mmsegmentation==0.27.0

@@ -1,0 +1,28 @@
+report:
+  type: "iou_f1_wf"
+  path: "../../../evaluation_results/Potsdam/segformer_no_cubic_001.txt"
+  wfm_edge: 3
+  wfm_aggregate: "min"
+  experiment: "Potsdam segformer_no_cubic_001"
+
+jobs:
+  - name: "predictions"
+    pred_dir: "../../../predictions/Potsdam/segformer_no_cubic_001"
+    label_dir: "../../../examples/Potsdam/label_index/test"
+    output_dir: "../../../evaluation_results/Potsdam/segformer_no_cubic_001"
+    pred_exts: [".png", ".tif", ".jpg", ".jpeg"]
+    label_exts: [".png", ".tif", ".jpg", ".jpeg"]
+    encoding:
+      num_classes: 5
+      label_values: [1, 2, 3, 4, 5]
+      pred_values: [1, 2, 3, 4, 5]
+      ignore_values: []
+    boundary:
+      enabled: true
+      edge_sizes: [3]
+      binarize: "lt255"
+      cleanup: true
+      overwrite: false
+    batch:
+      enabled: false
+      regex: "^checkpoint-\\d+$"

@@ -1,0 +1,28 @@
+report:
+  type: "iou_f1_wf"
+  path: "../../../evaluation_results/CHN6-CUG/segformer_no_align_001.txt"
+  wfm_edge: 3
+  wfm_aggregate: "min"
+  experiment: "CHN6-CUG segformer_no_align_001"
+
+jobs:
+  - name: "predictions"
+    pred_dir: "../../../predictions/CHN6-CUG/segformer_no_align_001"
+    label_dir: "../../../examples/CHN6-CUG/test/labels"
+    output_dir: "../../../evaluation_results/CHN6-CUG/segformer_no_align_001"
+    pred_exts: [".png", ".tif", ".jpg", ".jpeg"]
+    label_exts: [".png", ".tif", ".jpg", ".jpeg"]
+    encoding:
+      num_classes: 2
+      label_values: [0, 1]
+      pred_values: [0, 1]
+      ignore_values: []
+    boundary:
+      enabled: true
+      edge_sizes: [3]
+      binarize: "lt255"
+      cleanup: true
+      overwrite: false
+    batch:
+      enabled: false
+      regex: "^checkpoint-\\d+$"

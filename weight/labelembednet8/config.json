@@ -1,0 +1,6 @@
+{
+  "_class_name": "LabelEmbedNet",
+  "_diffusers_version": "0.25.0",
+  "label_emb_inchannels": 3,
+  "num_classes": 8
+}
