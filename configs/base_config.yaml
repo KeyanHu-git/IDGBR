@@ -1,0 +1,86 @@
+# configs/base_config.yaml
+
+# ==============================================================================
+# 1. Model Configuration (Base Model, SD, Tokenizer)
+# ==============================================================================
+pretrained_model_name_or_path: null                                   # dynamic
+sd_model_name_or_path: null                                           # dynamic
+revision: null
+tokenizer_name: null
+enable_xformers_memory_efficient_attention: false
+
+# ==============================================================================
+# 2. Project Specific (Custom Components)
+# ==============================================================================
+label_embed_dir: null                                                 # dynamic
+encoder_path: "../weight/DINOv2/dinov2_vit_g14.pth"               # shared
+acc_steps: 200                                                        # dynamic
+enable_alignment: true                                                # dynamic
+proj_coeff: 1.0
+metadata_file: null                                                   # dynamic
+dataset: null                                                         # dynamic
+conditioning_dropout_prob: 0.2
+time_sample_strategy: false                                           # dynamic
+use_rough_guidance: true                                              # dynamic
+
+# ==============================================================================
+# 3. Data Configuration (Input, Resolution, Batch)
+# ==============================================================================
+train_data_dir: null
+dataset_name: null
+dataset_config_name: null
+cache_dir: null
+image_column: "image"
+conditioning_image_column: null
+caption_column: "text"
+train_batch_size: 4                                                   # dynamic
+dataloader_num_workers: 6
+max_train_samples: null
+proportion_empty_prompts: 0.0
+
+# ==============================================================================
+# 4. Training Loop Configuration (Steps, Epochs, Checkpoints)
+# ==============================================================================
+output_dir: null                                                      # dynamic
+seed: 42
+num_train_epochs: 1
+max_train_steps: 20000                                                # dynamic
+checkpointing_steps: 500                                              # dynamic
+checkpoints_total_limit: null
+resume_from_checkpoint: "latest"
+gradient_accumulation_steps: 1
+gradient_checkpointing: false
+mixed_precision: "fp16"
+allow_tf32: false
+
+# ==============================================================================
+# 5. Optimizer & Scheduler Configuration
+# ==============================================================================
+learning_rate: 1.0e-5
+scale_lr: false
+lr_scheduler: "cosine"
+lr_warmup_steps: 500
+lr_num_cycles: 1
+lr_power: 1.0
+use_8bit_adam: false
+adam_beta1: 0.9
+adam_beta2: 0.999
+adam_weight_decay: 1.0e-2
+adam_epsilon: 1.0e-08
+max_grad_norm: 1.0
+set_grads_to_none: false
+
+# ==============================================================================
+# 6. Validation, Logging & Hub
+# ==============================================================================
+validation_prompt: null
+validation_image: null
+num_validation_images: 4
+validation_steps: 100
+log_steps: 100
+logging_dir: "logs"
+report_to: "tensorboard"
+tracker_project_name: "train_controlnet"
+push_to_hub: false
+hub_token: null
+hub_model_id: null

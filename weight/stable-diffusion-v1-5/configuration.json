@@ -1,0 +1,68 @@
+{
+    "framework": "pytorch",
+    "task": "text-to-image-synthesis",
+    "pipeline": {
+        "type": "diffusers-stable-diffusion"
+    },
+    "model": {
+        "type": "stable-diffusion",
+        "pretrained_model_name_or_path": "runwayml/stable-diffusion-v1-5",
+        "lora_tune": true,
+        "dreambooth_tune": false
+    },
+    "preprocessor": {
+        "type": "diffusion-image-generation-preprocessor",
+        "resolution": 512,
+        "mean": [0.5],
+        "std": [0.5]
+    },
+    "train": {
+        "dataloader": {
+            "batch_size_per_gpu": 1,
+            "workers_per_gpu": 4,
+            "shuffle": true
+        },
+        "optimizer": {
+            "type": "AdamW",
+            "lr": 0.00005,
+            "weight_decay": 0.01
+        },
+        "lr_scheduler": {
+            "type": "LambdaLR"
+        },
+        "max_epochs": 100,
+        "lr_scheduler_hook": {
+            "type": "LrSchedulerHook",
+            "by_epoch": false
+        },
+        "optimizer_hook": {
+            "type": "OptimizerHook"
+        },
+        "hooks": [
+            {
+                "type": "CheckpointHook",
+                "interval": 1000
+            },
+            {
+                "type": "TextLoggerHook",
+                "interval": 1,
+                "by_epoch": false
+            },
+            {
+                "type": "IterTimerHook"
+            },
+            {
+                "type": "EvaluationHook",
+                "interval": 1000
+            }
+        ]
+    },
+    "evaluation": {
+        "dataloader": {
+            "batch_size_per_gpu": 1,
+            "workers_per_gpu": 4,
+            "shuffle": false
+        },
+        "metrics": ["loss-metric"]
+    }
+}

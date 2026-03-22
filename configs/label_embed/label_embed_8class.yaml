@@ -1,0 +1,34 @@
+output_dir: "../../weight/labelembednet8"
+init_from: null
+num_classes: 8
+label_emb_inchannels: 3
+label_resolution: 64
+noise_std: 0.15
+
+train_batch_size: 4
+max_train_steps: 20000
+checkpointing_steps: 5000
+checkpoints_total_limit: null
+gradient_accumulation_steps: 1
+seed: 42
+
+learning_rate: 1.0e-5
+scale_lr: false
+lr_scheduler: "cosine"
+lr_warmup_steps: 500
+lr_num_cycles: 1
+lr_power: 1.0
+adam_beta1: 0.9
+adam_beta2: 0.999
+adam_weight_decay: 1.0e-2
+adam_epsilon: 1.0e-8
+max_grad_norm: 1.0
+set_grads_to_none: true
+
+mixed_precision: "fp16"
+allow_tf32: false
+resume_from_checkpoint: "latest"
+log_steps: 100
+logging_dir: "logs"
+report_to: "tensorboard"
+tracker_project_name: "train_label_embed_8class"

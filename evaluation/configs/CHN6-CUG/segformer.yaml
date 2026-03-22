@@ -1,0 +1,28 @@
+report:
+  type: "iou_f1_wf"
+  path: "../../../evaluation_results/CHN6-CUG/segformer.txt"
+  wfm_edge: 3
+  wfm_aggregate: "min"
+  experiment: "CHN6-CUG segformer"
+
+jobs:
+  - name: "segformer"
+    pred_dir: "../../../examples/CHN6-CUG/test/rough_labels"
+    label_dir: "../../../examples/CHN6-CUG/test/labels"
+    output_dir: "../../../evaluation_results/CHN6-CUG/segformer"
+    pred_exts: [".png", ".tif", ".jpg"]
+    label_exts: [".png", ".tif", ".jpg"]
+    encoding:
+      num_classes: 2
+      label_values: [0, 1]
+      pred_values: [0, 1]
+      ignore_values: []
+    boundary:
+      enabled: true
+      edge_sizes: [3]
+      binarize: "lt255"
+      cleanup: true
+      overwrite: false
+    batch:
+      enabled: false
+      regex: "^checkpoint-\\d+$"

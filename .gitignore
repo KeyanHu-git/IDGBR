@@ -1,0 +1,67 @@
+# Python caches
+__pycache__/
+*.py[cod]
+*.so
+
+# Packaging / build
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Notebooks / editors
+.ipynb_checkpoints/
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Environments
+.env
+.env.*
+.venv/
+venv/
+env/
+ENV/
+
+# Logs / tracking
+logs/
+wandb/
+runs/
+tensorboard/
+*.log
+
+# Training / inference outputs
+experiments/
+predictions/
+evaluation_results/
+
+# Local datasets
+examples/
+
+# External or large checkpoints
+weight/DINOv2/*.pth
+weight/stable-diffusion-v1-5/unet/
+weight/stable-diffusion-v1-5/vae/
+weight/stable-diffusion-v1-5/text_encoder/
+weight/stable-diffusion-v1-5/tokenizer/
+weight/stable-diffusion-v1-5/scheduler/
+weight/stable-diffusion-v1-5/safety_checker/
+weight/stable-diffusion-v1-5/feature_extractor/
+weight/labelembednet_xclass/
+
+# Keep released lightweight checkpoints and metadata
+!weight/labelembednet2/
+!weight/labelembednet2/**
+!weight/labelembednet8/
+!weight/labelembednet8/**
+!weight/stable-diffusion-v1-5/README.md
+!weight/stable-diffusion-v1-5/configuration.json
+!weight/stable-diffusion-v1-5/model_index.json
+
