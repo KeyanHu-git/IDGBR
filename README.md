@@ -12,9 +12,9 @@
 
 <p align="center">
   <a href="https://arxiv.org/abs/2507.01573"><img src="https://img.shields.io/badge/arXiv-IDGBR-b31b1b" alt="arXiv"></a>
-  <a href="https://github.com/OWNER/REPO"><img src="https://img.shields.io/github/stars/OWNER/REPO" alt="Stars"></a>
-  <img src="https://visitor-badge.laobi.icu/badge?page_id=OWNER.REPO" alt="Visitors">
-  <img src="https://img.shields.io/badge/Maintained%3F-yes-brightgreen" alt="Maintained">
+  <a href="https://github.com/KeyanHu-git/IDGBR"><img src="https://img.shields.io/github/stars/KeyanHu-git/IDGBR" alt="Stars"></a>
+  <img src="https://visitor-badge.laobi.icu/badge?page_id=KeyanHu-git.IDGBR.v0_1_1_release" alt="Visitors">
+  <img src="https://img.shields.io/badge/status-maintained-brightgreen" alt="Status">
 </p>
 
 ---
