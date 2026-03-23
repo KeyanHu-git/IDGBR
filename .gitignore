@@ -31,36 +31,36 @@ env/
 ENV/
 
 # Logs / tracking
-logs/
-wandb/
-runs/
-tensorboard/
+/logs/
+/wandb/
+/runs/
+/tensorboard/
 *.log
 
 # Training / inference outputs
 /experiments/
-predictions/
-evaluation_results/
+/predictions/
+/evaluation_results/
 
 # Local datasets
-examples/
+/examples/
 
 # External or large checkpoints
-weight/DINOv2/*.pth
-weight/stable-diffusion-v1-5/unet/
-weight/stable-diffusion-v1-5/vae/
-weight/stable-diffusion-v1-5/text_encoder/
-weight/stable-diffusion-v1-5/tokenizer/
-weight/stable-diffusion-v1-5/scheduler/
-weight/stable-diffusion-v1-5/safety_checker/
-weight/stable-diffusion-v1-5/feature_extractor/
-weight/labelembednet_xclass/
+/weight/DINOv2/*.pth
+/weight/stable-diffusion-v1-5/unet/
+/weight/stable-diffusion-v1-5/vae/
+/weight/stable-diffusion-v1-5/text_encoder/
+/weight/stable-diffusion-v1-5/tokenizer/
+/weight/stable-diffusion-v1-5/scheduler/
+/weight/stable-diffusion-v1-5/safety_checker/
+/weight/stable-diffusion-v1-5/feature_extractor/
+/weight/labelembednet_xclass/
 
 # Keep released lightweight checkpoints and metadata
-!weight/labelembednet2/
-!weight/labelembednet2/**
-!weight/labelembednet8/
-!weight/labelembednet8/**
-!weight/stable-diffusion-v1-5/README.md
-!weight/stable-diffusion-v1-5/configuration.json
-!weight/stable-diffusion-v1-5/model_index.json
+!/weight/labelembednet2/
+!/weight/labelembednet2/**
+!/weight/labelembednet8/
+!/weight/labelembednet8/**
+!/weight/stable-diffusion-v1-5/README.md
+!/weight/stable-diffusion-v1-5/configuration.json
+!/weight/stable-diffusion-v1-5/model_index.json
