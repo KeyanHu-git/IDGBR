@@ -38,7 +38,7 @@ tensorboard/
 *.log
 
 # Training / inference outputs
-experiments/
+/experiments/
 predictions/
 evaluation_results/
 
@@ -64,4 +64,3 @@ weight/labelembednet_xclass/
 !weight/stable-diffusion-v1-5/README.md
 !weight/stable-diffusion-v1-5/configuration.json
 !weight/stable-diffusion-v1-5/model_index.json
-
