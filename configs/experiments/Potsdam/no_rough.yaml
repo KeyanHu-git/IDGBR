@@ -1,0 +1,35 @@
+# ==============================================================================
+# Inheritance
+# ==============================================================================
+_base_: "../../base_config.yaml"
+
+# ==============================================================================
+# 1. Experiment Identity & Paths
+# ==============================================================================
+output_dir: "../../../experiments/Potsdam/no_rough_001"
+pretrained_model_name_or_path: "../../../weight/stable-diffusion-v1-5"
+sd_model_name_or_path: "../../../weight/stable-diffusion-v1-5"
+label_embed_dir: "../../../weight/labelembednet8"
+
+# ==============================================================================
+# 2. Dataset & Task Configuration
+# ==============================================================================
+train_data_dir: "../../../examples/Potsdam"
+metadata_file: "metadata_i2s_segformer_train.jsonl"
+dataset: "../../datasets/Potsdam/train_no_rough.yaml"
+
+# ==============================================================================
+# 3. Training Dynamics
+# ==============================================================================
+train_batch_size: 4
+gradient_accumulation_steps: 1
+max_train_steps: 80000
+checkpointing_steps: 40000
+acc_steps: 200
+enable_alignment: true
+
+# ==============================================================================
+# 4. Strategies
+# ==============================================================================
+time_sample_strategy: true
+use_rough_guidance: false
