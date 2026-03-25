@@ -46,7 +46,7 @@ The figure below highlights this complementarity and motivates the design of IDG
 ## Model Architecture
 IDGBR follows a two-stage framework that combines discriminative coarse segmentation with diffusion-based boundary refinement. Rather than regenerating the entire semantic layout, it preserves the global semantics provided by the coarse prediction and focuses on refining boundary details and local geometric structures.
 
-The discriminative branch is responsible for semantic localization, while the diffusion branch is dedicated to boundary refinement. In **Stage I**, a frozen discriminative model produces a rough prediction $M_{\mathrm{r}}$ as the semantic prior. In **Stage II**, the image and rough prediction are jointly fed into the latent diffusion process, where the **Denoising U-Net** and **Conditional Guidance (CG) Net** work together to recover finer boundaries.
+The discriminative branch is responsible for semantic localization, while the diffusion branch is dedicated to boundary refinement. In **Stage I**, a frozen discriminative model produces a rough prediction $M_r$ as the semantic prior. In **Stage II**, the image and rough prediction are jointly fed into the latent diffusion process, where the **Denoising U-Net** and **Conditional Guidance (CG) Net** work together to recover finer boundaries.
 
 <p align="center">
   <img src="images/Model_architecture.png" alt="IDGBR model architecture" width="100%">
@@ -60,50 +60,50 @@ To characterize the practical repair capability of the model on rough prediction
 </p>
 <p align="center">Complete repair example: local errors in the rough prediction are effectively corrected while the correct regions remain stable</p>
 
-Complete Repair ($\mathrm{IoU}_{\mathrm{imp}}\ge80\%$) represents efficient correction of erroneous regions while perfectly preserving the features of correct regions. This case typically occurs when a semantic patch contains only local omissions or commissions, allowing the model to infer the complete geometry and structure of the target from the remaining correct semantic context.
+Complete Repair ($IoU_{imp}\ge80\%$) represents efficient correction of erroneous regions while perfectly preserving the features of correct regions. This case typically occurs when a semantic patch contains only local omissions or commissions, allowing the model to infer the complete geometry and structure of the target from the remaining correct semantic context.
 
 <p align="center">
   <img src="images/visualization_partial_repair.png" alt="Partial semantic patch repair case" width="100%">
 </p>
 <p align="center">Partial repair example: the erroneous region is locally improved, but the full geometric structure of the target is not completely recovered</p>
 
-Partial Repair ($0\le\mathrm{IoU}_{\mathrm{imp}}<80\%$) indicates effective repair of some errors without causing severe damage to correct features. This usually occurs when the retained correct region only provides local geometric continuity, but lacks sufficient prior cues to recover the full width, length, or overall shape of the target, resulting in only local semantic and topological correction.
+Partial Repair ($0\le IoU_{imp}<80\%$) indicates effective repair of some errors without causing severe damage to correct features. This usually occurs when the retained correct region only provides local geometric continuity, but lacks sufficient prior cues to recover the full width, length, or overall shape of the target, resulting in only local semantic and topological correction.
 
 <p align="center">
   <img src="images/visualization_failed_repair.png" alt="Semantic patch repair failure case" width="100%">
 </p>
 <p align="center">Error repair example: the damage to correct regions outweighs the repair benefit on erroneous regions</p>
 
-Error Repair ($\mathrm{IoU}_{\mathrm{imp}}<0$) implies that the damage to correct regions outweighs the repair benefits. When a target semantic patch is completely missed or misclassified and no reliable cues can be inferred from neighboring regions, the model struggles to recover such deep semantic errors and may even result in negative optimization due to misleading localization cues.
+Error Repair ($IoU_{imp}<0$) implies that the damage to correct regions outweighs the repair benefits. When a target semantic patch is completely missed or misclassified and no reliable cues can be inferred from neighboring regions, the model struggles to recover such deep semantic errors and may even result in negative optimization due to misleading localization cues.
 
-The quantitative metric for this repair capability is constructed from the spatial discrepancy between the rough prediction $M_{\mathrm{r}}$ and the ground truth $M_{\mathrm{t}}$. Specifically, the rough prediction space is first divided into the mask of True predicted Region and the mask of False predicted Region:
+The quantitative metric for this repair capability is constructed from the spatial discrepancy between the rough prediction $M_r$ and the ground truth $M_t$. Specifically, the rough prediction space is first divided into the mask of True predicted Region and the mask of False predicted Region:
 
 True predicted Region:
 
 $$
-M_{\mathrm{RTm}} = M_{\mathrm{t}} \cap M_{\mathrm{r}}
+M_{RTm} = M_t \cap M_r
 $$
 
 False predicted Region:
 
 $$
-M_{\mathrm{RFm}} = (M_{\mathrm{t}} \cup M_{\mathrm{r}}) - (M_{\mathrm{t}} \cap M_{\mathrm{r}})
+M_{RFm} = (M_t \cup M_r) - (M_t \cap M_r)
 $$
 
-The intersection-over-union (IoU) of the refined prediction $M_{\mathrm{re}}$ is then computed separately within these two specific regions:
+The intersection-over-union (IoU) of the refined prediction $M_{re}$ is then computed separately within these two specific regions:
 
 $$
-\mathrm{IoU}_{\mathrm{RTm}} = \frac{|M_{\mathrm{t}} \cap M_{\mathrm{re}} \cap M_{\mathrm{RTm}}|}{|(M_{\mathrm{t}} \cap M_{\mathrm{RTm}}) \cup (M_{\mathrm{re}} \cap M_{\mathrm{RTm}})|}
+IoU_{RTm} = \frac{|M_t \cap M_{re} \cap M_{RTm}|}{|(M_t \cap M_{RTm}) \cup (M_{re} \cap M_{RTm})|}
 $$
 
 $$
-\mathrm{IoU}_{\mathrm{RFm}} = \frac{|M_{\mathrm{t}} \cap M_{\mathrm{re}} \cap M_{\mathrm{RFm}}|}{|(M_{\mathrm{t}} \cap M_{\mathrm{RFm}}) \cup (M_{\mathrm{re}} \cap M_{\mathrm{RFm}})|}
+IoU_{RFm} = \frac{|M_t \cap M_{re} \cap M_{RFm}|}{|(M_t \cap M_{RFm}) \cup (M_{re} \cap M_{RFm})|}
 $$
 
-$\mathrm{IoU}_{\mathrm{RTm}}$ measures the model's capability to preserve true predicted regions; an excessively low value indicates significant degradation of correct regions. $\mathrm{IoU}_{\mathrm{RFm}}$ evaluates the model's ability to rectify false predicted regions, where a positive value indicates effective repair. Integrating both preservation and rectification capabilities, we define the final improvement score $\mathrm{IoU}_{\mathrm{imp}}$ by introducing a penalty term $k$ to balance their weights:
+$IoU_{RTm}$ measures the model's capability to preserve true predicted regions; an excessively low value indicates significant degradation of correct regions. $IoU_{RFm}$ evaluates the model's ability to rectify false predicted regions, where a positive value indicates effective repair. Integrating both preservation and rectification capabilities, we define the final improvement score $IoU_{imp}$ by introducing a penalty term $k$ to balance their weights:
 
 $$
-\mathrm{IoU}_{\mathrm{imp}} = \mathrm{IoU}_{\mathrm{RFm}} - k \times (1 - \mathrm{IoU}_{\mathrm{RTm}})
+IoU_{imp} = IoU_{RFm} - k \times (1 - IoU_{RTm})
 $$
 
 ## Training steps
