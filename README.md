@@ -20,7 +20,7 @@
 ---
 
 ## :sparkles: Overview
-Remote sensing semantic segmentation requires both semantic correctness over large regions and precise localization along object boundaries. Existing discriminative methods model low-frequency semantic structure well, but often miss high-frequency boundary details. Diffusion-based generative models show the opposite tendency: they are strong at fine-grained detail synthesis, yet weaker at stable semantic inference when conditioned only on raw images. IDGBR bridges this gap by combining discriminative coarse segmentation with diffusion-based boundary refinement, using the former for reliable semantic priors and the latter for boundary recovery.
+Remote sensing semantic segmentation requires both semantic correctness over large regions and precise localization along object boundaries. Existing discriminative methods model low-frequency semantic structure well, but often miss high-frequency boundary details. Diffusion-based generative models show the opposite tendency: they are strong at fine-grained detail synthesis, yet weaker at stable semantic inference when conditioned only on raw images. To bridge this gap, we propose Integration of Discriminative and Diffusion-based Generative Learning for Boundary Refinement (IDGBR), which combines discriminative coarse segmentation with diffusion-based boundary refinement, using the former for reliable semantic priors and the latter for boundary recovery.
 
 The figure below highlights this complementarity and motivates the design of IDGBR.
 
