@@ -1,4 +1,4 @@
-<h1 align="center">A Gift from the Integration of Discriminative and Diffusion-based Generative Learning: Boundary Refinement Remote Sensing Semantic Segmentation</h1>
+<h1 align="center">[TPAMI 2026] A Gift from the Integration of Discriminative and Diffusion-based Generative Learning: Boundary Refinement Remote Sensing Semantic Segmentation</h1>
 
 <p align="center">
   <a href="https://orcid.org/0000-0002-3964-479X">Hao Wang</a><sup>1,2</sup>, <a href="https://orcid.org/0000-0003-0168-5606">Keyan Hu</a><sup>1</sup>, <a href="https://orcid.org/0009-0009-6154-120X">Xin Guo</a><sup>1</sup>, <a href="https://orcid.org/0000-0003-1173-6593">Haifeng Li</a><sup>1</sup>, <a href="https://orcid.org/0000-0003-0071-310X">Chao Tao</a><sup>1*</sup>
@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <a href="https://arxiv.org/abs/2507.01573"><img src="https://img.shields.io/badge/arXiv-IDGBR-b31b1b" alt="arXiv"></a>
+  <a href="https://doi.org/10.1109/TPAMI.2026.3654243"><img src="https://img.shields.io/badge/TPAMI-2026-blue" alt="TPAMI"></a>
   <a href="https://github.com/KeyanHu-git/IDGBR"><img src="https://img.shields.io/github/stars/KeyanHu-git/IDGBR" alt="Stars"></a>
   <img src="https://visitor-badge.laobi.icu/badge?page_id=KeyanHu-git.IDGBR.v0_1_1_release" alt="Visitors">
   <img src="https://img.shields.io/badge/status-maintained-brightgreen" alt="Status">
