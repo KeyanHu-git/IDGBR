@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <a href="https://doi.org/10.1109/TPAMI.2026.3654243"><img src="https://img.shields.io/badge/TPAMI-2026-blue" alt="TPAMI"></a>
+  <a href="https://arxiv.org/abs/2507.01573"><img src="https://img.shields.io/badge/arXiv-IDGBR-b31b1b" alt="arXiv"></a>
   <a href="https://github.com/KeyanHu-git/IDGBR"><img src="https://img.shields.io/github/stars/KeyanHu-git/IDGBR" alt="Stars"></a>
   <img src="https://visitor-badge.laobi.icu/badge?page_id=KeyanHu-git.IDGBR.v0_1_1_release" alt="Visitors">
   <img src="https://img.shields.io/badge/status-maintained-brightgreen" alt="Status">
