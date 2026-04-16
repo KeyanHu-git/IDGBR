@@ -151,6 +151,8 @@ examples/
 ├── ...
 ```
 
+The complete repo-ready example dataset package used in this release is available in the [Google Drive folder](https://drive.google.com/open?id=13tIS5qWShFtZwNua4RVrNOWJIwWXEqdl). It provides the CHN6-CUG and Potsdam examples with the project-specific train/test splits, images, annotations, and SegFormer coarse masks in the repo-ready layout used by this release. The original datasets are [CHN6-CUG](https://www.ncdc.ac.cn/portal/metadata/b46613f7-b7d2-407c-9e55-e33220011585) and [Potsdam](https://www.isprs.org/resources/datasets/benchmarks/UrbanSemLab/2d-sem-label-potsdam.aspx).
+
 ## Pretrained Weights
 All model paths in the configs are resolved under `weight/`.
 
