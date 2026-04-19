@@ -73,7 +73,7 @@ def parse_args(input_args=None):
     parser.add_argument("--acc_steps", type=int, default=200, help="Alignment steps for encoder guidance")
     parser.add_argument("--enable_alignment", dest="enable_alignment", action="store_true", help="Enable representation alignment")
     parser.add_argument("--disable_alignment", dest="enable_alignment", action="store_false", help="Disable representation alignment")
-    parser.add_argument("--proj_coeff", type=float, default=1.0, help="Projection loss coefficient")
+    parser.add_argument("--proj_coeff", type=float, default=0.5, help="Projection loss coefficient")
     parser.add_argument("--metadata_file", type=str, default=None, help="Metadata filename")
     parser.add_argument("--dataset", default=None, help="Dataset behavior configuration")
     parser.add_argument("--conditioning_dropout_prob", type=float, default=0.2, help="Dropout for conditioning")
