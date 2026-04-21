@@ -7,6 +7,14 @@ import torch.nn.functional as F
 from torch import nn
 
 
+def _to_2tuple(value):
+    if isinstance(value, (tuple, list)):
+        if len(value) != 2:
+            raise ValueError(f"Expected a 2-value tuple/list, got: {value!r}")
+        return (int(value[0]), int(value[1]))
+    return (int(value), int(value))
+
+
 class MixFFN(nn.Module):
     """An implementation of MixFFN of Segformer."""
 
@@ -675,19 +683,21 @@ class CrossAttentionLayer(nn.Module):
         eps: float = 1e-6,
     ):
         super().__init__()
+        patch_h, patch_w = _to_2tuple(patch_size)
+        self.patch_size = (patch_h, patch_w)
 
         self.conv1_q = nn.Conv2d(
             in_channels=in_channels,
             out_channels=width,
-            kernel_size=patch_size,
-            stride=patch_size,
+            kernel_size=self.patch_size,
+            stride=self.patch_size,
             bias=False,
         )
         self.conv1_k = nn.Conv2d(
             in_channels=cross_dim,
             out_channels=width,
-            kernel_size=patch_size,
-            stride=patch_size,
+            kernel_size=self.patch_size,
+            stride=self.patch_size,
             bias=False,
         )
 
@@ -697,12 +707,16 @@ class CrossAttentionLayer(nn.Module):
         self.transformer = Transformer(width, layers, heads)
 
         self.ln_post = LayerNorm(width)
-        self.input_resolution = input_resolution
+        self.input_resolution = _to_2tuple(input_resolution) if input_resolution is not None else self.patch_size
+        self.base_grid_size = (
+            max(1, self.input_resolution[0] // self.patch_size[0]),
+            max(1, self.input_resolution[1] // self.patch_size[1]),
+        )
         
         scale = width**-0.5
         self.positional_embedding = nn.Parameter(
-                    scale * torch.randn((self.input_resolution // patch_size) ** 2, width)
-                )
+            scale * torch.randn(self.base_grid_size[0] * self.base_grid_size[1], width)
+        )
         self.proj = nn.Conv2d(
             in_channels=width,
             out_channels=output_dim,
@@ -711,22 +725,37 @@ class CrossAttentionLayer(nn.Module):
             bias=False,
         )
 
+    def _get_positional_embedding(self, grid_h: int, grid_w: int, dtype, device):
+        pos = self.positional_embedding
+        if (grid_h, grid_w) != self.base_grid_size:
+            pos = pos.reshape(
+                self.base_grid_size[0], self.base_grid_size[1], -1
+            ).permute(2, 0, 1).unsqueeze(0)
+            pos = F.interpolate(
+                pos.float(),
+                size=(grid_h, grid_w),
+                mode="bicubic",
+                align_corners=False,
+            )
+            pos = pos.squeeze(0).permute(1, 2, 0).reshape(grid_h * grid_w, -1)
+        return pos.to(device=device, dtype=dtype)
+
     def x_pre(self, x: torch.Tensor, conv1: nn.Module, ln_pre: nn.Module):
-        
         x = conv1(x)  # shape = [*, width, grid, grid]
+        grid_h, grid_w = x.shape[-2:]
         x = x.reshape(x.shape[0], x.shape[1], -1)  # shape = [*, width, grid ** 2]
         x = x.permute(0, 2, 1)  # shape = [*, grid ** 2, width]
-        x = x + self.positional_embedding.to(x.dtype)
+        x = x + self._get_positional_embedding(grid_h, grid_w, x.dtype, x.device)
         x = x.permute(1, 0, 2)  # NLD -> LND
 
         x = ln_pre(x)
-        return x
+        return x, grid_h, grid_w
 
     def forward(self, q: torch.Tensor,k: torch.Tensor):
-        N, C, H, W = q.shape
+        N = q.shape[0]
         res=q
-        q = self.x_pre(q, ln_pre=self.ln_pre_q, conv1=self.conv1_q)
-        k = self.x_pre(k, ln_pre=self.ln_pre_k, conv1=self.conv1_k)
+        q, grid_h, grid_w = self.x_pre(q, ln_pre=self.ln_pre_q, conv1=self.conv1_q)
+        k, _, _ = self.x_pre(k, ln_pre=self.ln_pre_k, conv1=self.conv1_k)
         
         x = self.transformer(q,k,k)
 
@@ -734,7 +763,7 @@ class CrossAttentionLayer(nn.Module):
 
         x = self.ln_post(x)
 
-        x = x.permute(0, 2, 1).view(N, x.shape[2], H, W)
+        x = x.permute(0, 2, 1).view(N, x.shape[2], grid_h, grid_w)
 
         out = self.proj(x)
         

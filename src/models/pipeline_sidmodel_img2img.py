@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import inspect
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import PIL.Image
@@ -650,12 +650,16 @@ class StableDiffusionSIDModelImg2ImgPipeline(
         device,
         generator,
         latents=None,
+        latent_shape: Optional[Tuple[int, int]] = None,
     ):
+        latent_height, latent_width = (
+            latent_shape if latent_shape is not None else (height // self.vae_scale_factor, width // self.vae_scale_factor)
+        )
         shape = (
             batch_size,
             num_channels_latents,
-            height // self.vae_scale_factor,
-            width // self.vae_scale_factor,
+            latent_height,
+            latent_width,
         )
         if isinstance(generator, list) and len(generator) != batch_size:
             raise ValueError(
@@ -733,8 +737,8 @@ class StableDiffusionSIDModelImg2ImgPipeline(
         image: PipelineImageInput = None,
         rough_label: PipelineImageInput = None,
         interact_direction: str = "seg",
-        height: Optional[int] = 512,
-        width: Optional[int] = 512,
+        height: Optional[int] = None,
+        width: Optional[int] = None,
         strength: float = 0.8,
         num_inference_steps: int = 50,
         guidance_scale: float = 7.5,
@@ -916,8 +920,23 @@ class StableDiffusionSIDModelImg2ImgPipeline(
         # 4. Prepare image
         dtype = self.text_encoder.dtype
         image = image.to(dtype=dtype).to(device=device)
+        image_height, image_width = image.shape[-2:]
+        height = int(image_height if height is None else height)
+        width = int(image_width if width is None else width)
+        if (height, width) != (image_height, image_width):
+            raise ValueError(
+                f"Image tensor shape {(image_height, image_width)} does not match requested size {(height, width)}."
+            )
+        if height % self.vae_scale_factor != 0 or width % self.vae_scale_factor != 0:
+            raise ValueError(
+                f"Image size {(height, width)} must be divisible by the VAE scale factor {self.vae_scale_factor}."
+            )
         
         rough_label = rough_label.to(device=device)
+        if tuple(rough_label.shape[-2:]) != (height, width):
+            raise ValueError(
+                f"Rough label tensor shape {tuple(rough_label.shape[-2:])} does not match image size {(height, width)}."
+            )
         rough_label_embed = self.label_embed_net.encode(rough_label)
 
         rough_lbl_latents = self.vae.encode(
@@ -948,6 +967,7 @@ class StableDiffusionSIDModelImg2ImgPipeline(
             device,
             generator,
             latents,
+            latent_shape=tuple(cond_latents.shape[-2:]),
         )
 
         # 7. Prepare extra step kwargs. TODO: Logic should ideally just be moved out of the pipeline

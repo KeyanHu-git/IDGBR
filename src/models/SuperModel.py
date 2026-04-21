@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import torch.utils.checkpoint
 from typing import List, Optional, Tuple, Union
 
@@ -59,6 +60,7 @@ class InteractNet(ModelMixin, ConfigMixin):
 
     _supports_gradient_checkpointing = True
 
+    @register_to_config
     def __init__(
         self,
         conditioning_channels: int = 3,
@@ -237,7 +239,6 @@ class SIDModel(ModelMixin, ConfigMixin):
         self.spatial_out_tokens = spatial_out_tokens
 
         self.projectors = None
-        self.spatial_expander = None
         if z_dims:
             if hasattr(unet_gen, "config") and hasattr(
                 unet_gen.config, "block_out_channels"
@@ -247,11 +248,6 @@ class SIDModel(ModelMixin, ConfigMixin):
                 inner_dim = unet_gen.conv_out.in_channels
             self.projectors = nn.ModuleList(
                 [build_mlp(inner_dim, projector_dim, z_dim) for z_dim in z_dims]
-            )
-            self.spatial_expander = nn.Sequential(
-                nn.Linear(self.spatial_in_tokens, 256),
-                nn.GELU(),
-                nn.Linear(256, self.spatial_out_tokens),
             )
             self._initialize_projectors()
 
@@ -268,21 +264,29 @@ class SIDModel(ModelMixin, ConfigMixin):
         for projector in self.projectors:
             projector.apply(_basic_init)
 
-    def _build_representators(self, down_block_res_samples_q, down_block_res_samples):
+    def _build_representators(
+        self,
+        down_block_res_samples_q,
+        down_block_res_samples,
+        target_token_grid: Optional[Tuple[int, int]] = None,
+    ):
         if self.projectors is None:
             return None
         x = down_block_res_samples[-1]
         bsz, channels, height, width = x.shape
-        tokens = height * width
         x = x.flatten(2).permute(0, 2, 1)
         representators_tilde = []
         for projector in self.projectors:
-            z = projector(x.reshape(-1, channels)).view(bsz, tokens, -1)
-            if self.spatial_expander is not None and tokens == self.spatial_in_tokens:
-                z_expanded = self.spatial_expander(z.permute(0, 2, 1)).permute(0, 2, 1)
-            else:
-                z_expanded = z
-            representators_tilde.append(z_expanded)
+            z = projector(x.reshape(-1, channels)).view(bsz, height, width, -1)
+            z = z.permute(0, 3, 1, 2)
+            if target_token_grid is not None and tuple(target_token_grid) != (height, width):
+                z = F.interpolate(
+                    z,
+                    size=target_token_grid,
+                    mode="bilinear",
+                    align_corners=False,
+                )
+            representators_tilde.append(z.flatten(2).permute(0, 2, 1))
         return representators_tilde
 
     def connect_process(
@@ -332,6 +336,7 @@ class SIDModel(ModelMixin, ConfigMixin):
         cond_latents_2,
         timesteps,
         encoder_hidden_states,
+        target_token_grid: Optional[Tuple[int, int]] = None,
     ):
         down_block_res_samples, mid_block_sample, _ = self.connect_process(
             noise_latents,
@@ -340,7 +345,11 @@ class SIDModel(ModelMixin, ConfigMixin):
             timesteps,
             encoder_hidden_states,
         )
-        representators_tilde = self._build_representators(None, down_block_res_samples)
+        representators_tilde = self._build_representators(
+            None,
+            down_block_res_samples,
+            target_token_grid=target_token_grid,
+        )
 
         unet_output = self.unet_gen(
             noise_latents,
@@ -363,14 +372,19 @@ class SIDModel(ModelMixin, ConfigMixin):
         cond_latents_2=None,
         timesteps=None,
         encoder_hidden_states=None,
+        target_token_grid: Optional[Tuple[int, int]] = None,
+        return_representations: bool = False,
     ):
-        seg_model_pred, _ = self.get_gen_pred(
+        seg_model_pred, representators_tilde = self.get_gen_pred(
             noise_latents,
             cond_latents_1,
             cond_latents_2,
             timesteps,
             encoder_hidden_states,
+            target_token_grid=target_token_grid,
         )
+        if return_representations:
+            return seg_model_pred, representators_tilde
         return seg_model_pred
 
     @torch.no_grad()
