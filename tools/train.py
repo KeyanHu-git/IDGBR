@@ -117,18 +117,21 @@ def main(args):
 
     noise_scheduler = DDIMScheduler.from_pretrained(args.sd_model_name_or_path, subfolder="scheduler")
     noise_scheduler.config.prediction_type = "epsilon"
+    vae_scale_factor = None
     
     text_encoder = text_encoder_cls.from_pretrained(args.sd_model_name_or_path, subfolder="text_encoder", revision=args.revision,)
     
     vae = AutoencoderKL.from_pretrained(args.sd_model_name_or_path, subfolder="vae", revision=args.revision)
+    vae_scale_factor = 2 ** (len(vae.config.block_out_channels) - 1)
     unet_ori = UNet2DConditionEncodeModel.from_pretrained(args.sd_model_name_or_path, subfolder="unet", revision=args.revision,)
     unet_gen = UNet2DConditionNewModel.from_pretrained(args.sd_model_name_or_path, subfolder="unet", revision=args.revision,)
     interact_net = InteractNet()
     label_embed_net = LabelEmbedNet.from_pretrained(args.label_embed_dir, revision=args.revision,)
     encoder = None
     encoder_type = None
+    encoder_patch_size = None
     if args.enable_alignment:
-        encoder, encoder_type, _ = load_encoders_from_file(args.encoder_path, accelerator.device)
+        encoder, encoder_type, _, encoder_patch_size = load_encoders_from_file(args.encoder_path, accelerator.device)
     z_dims = [encoder.embed_dim] if encoder is not None else None
 
     # --------------------------------------------------------------------------
@@ -363,15 +366,31 @@ def main(args):
     for epoch in range(first_epoch, args.num_train_epochs):
         for step, batch in enumerate(train_dataloader):
             with accelerator.accumulate(sid_model):
+                if batch["image"].shape[-2] % vae_scale_factor != 0 or batch["image"].shape[-1] % vae_scale_factor != 0:
+                    raise ValueError(
+                        f"Dataset resize produced image shape {tuple(batch['image'].shape[-2:])}, "
+                        f"which must be divisible by the VAE scale factor {vae_scale_factor}."
+                    )
                 representators_outputs = None
+                representators_token_grid = None
                 if args.enable_alignment and encoder is not None and global_step < args.acc_steps:
                     with torch.no_grad(), accelerator.autocast():
+                        encoder_inputs = preprocess_image(
+                            batch["image"],
+                            encoder_type=encoder_type,
+                            patch_size=encoder_patch_size,
+                        )
                         representators_output = encoder.forward_features(
-                            preprocess_image(batch["image"], encoder_type=encoder_type)
+                            encoder_inputs
                         )
                         if isinstance(representators_output, dict) and "x_norm_patchtokens" in representators_output:
                             representators_output = representators_output["x_norm_patchtokens"]
                         representators_outputs = [representators_output]
+                        if encoder_patch_size is not None:
+                            representators_token_grid = (
+                                encoder_inputs.shape[-2] // encoder_patch_size,
+                                encoder_inputs.shape[-1] // encoder_patch_size,
+                            )
                 elif args.enable_alignment and encoder is not None and (not alignment_released) and global_step >= args.acc_steps:
                     if accelerator.is_main_process:
                         accelerator.print("Alignment finished. Release DINO encoder from GPU.")
@@ -418,12 +437,14 @@ def main(args):
                     token_captions10 = torch.stack([example for example in tokenize_captions(batch_mask_text10)])
                     encoder_hidden_states10 = text_encoder(token_captions10.to(accelerator.device))[0]
 
-                    model_pred, representators_tilde = sid_model.get_gen_pred(
+                    model_pred, representators_tilde = sid_model(
                         noise_latents=noisy_latents,
                         cond_latents_1=img_latents,
                         cond_latents_2=rough_lbl_latents,
                         timesteps=timesteps,
                         encoder_hidden_states=encoder_hidden_states10,
+                        target_token_grid=representators_token_grid,
+                        return_representations=True,
                     )
 
                 denoising_loss = F.mse_loss((model_pred).float(), (noise).float(), reduction="mean")
@@ -438,11 +459,16 @@ def main(args):
                                 mode="linear",
                                 align_corners=False,
                             ).permute(0, 2, 1)
-                        representator_output = F.normalize(representator_output, dim=-1)
-                        representator_tilde = F.normalize(representator_tilde, dim=-1)
-                        proj_loss = proj_loss + mean_flat(
-                            -(representator_output * representator_tilde).sum(dim=-1)
-                        ).mean()
+                        representator_output = representator_output.float()
+                        representator_tilde = representator_tilde.float()
+                        representator_output = F.normalize(representator_output, dim=-1, eps=1e-6)
+                        tilde_norm = representator_tilde.norm(dim=-1, keepdim=True)
+                        valid_mask = tilde_norm.squeeze(-1) > 1e-6
+
+                        if valid_mask.any():
+                            representator_tilde = representator_tilde / tilde_norm.clamp_min(1e-6)
+                            cosine_per_token = -(representator_output * representator_tilde).sum(dim=-1)
+                            proj_loss = proj_loss + cosine_per_token[valid_mask].mean()
                     proj_loss = proj_loss / len(representators_outputs)
                     total_loss = denoising_loss + proj_loss * args.proj_coeff
                 else:

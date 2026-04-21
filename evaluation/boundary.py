@@ -83,4 +83,3 @@ def compute_wfm_for_edge_size(
     finally:
         if cleanup:
             shutil.rmtree(pred_edge_dir, ignore_errors=True)
-            shutil.rmtree(label_edge_dir, ignore_errors=True)
