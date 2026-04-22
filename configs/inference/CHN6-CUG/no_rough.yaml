@@ -14,6 +14,7 @@ strength: 1.0
 prompt: ""
 negative_prompt: null
 use_dataset_text: true
+use_rough_guidance: false
 seed: 42
 max_samples: null
 skip_existing: true

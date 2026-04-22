@@ -1,16 +1,7 @@
 import os
 import argparse
 
-from src.utils.config_parser import ConfigLoader, _resolve_relative_paths
-
-
-def _resolve_extra_paths(cfg, config_file_path):
-    config_dir = os.path.dirname(os.path.abspath(config_file_path))
-    for key in ("init_from", "output_dir"):
-        value = cfg.get(key)
-        if isinstance(value, str) and (value.startswith("./") or value.startswith("../")):
-            cfg[key] = os.path.normpath(os.path.join(config_dir, value))
-    return cfg
+from src.utils.config_parser import ConfigLoader
 
 
 def parse_args(input_args=None):
@@ -24,8 +15,6 @@ def parse_args(input_args=None):
     cfg_defaults = {}
     if pre_args.config_file is not None:
         cfg_defaults = ConfigLoader.load_recursive(pre_args.config_file)
-        cfg_defaults = _resolve_relative_paths(cfg_defaults, pre_args.config_file)
-        cfg_defaults = _resolve_extra_paths(cfg_defaults, pre_args.config_file)
 
     parser = argparse.ArgumentParser(description="LabelEmbedNet Training Script")
     parser.add_argument("--config_file", type=str, default=None, help="Path to yaml config file")
