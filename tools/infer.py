@@ -347,6 +347,7 @@ def main():
                 negative_prompt=args.negative_prompt,
                 image=batch["image"],
                 rough_label=batch["rough_label_index"],
+                use_rough_guidance=args.use_rough_guidance,
                 strength=args.strength,
                 num_inference_steps=args.num_inference_steps,
                 guidance_scale=args.guidance_scale,

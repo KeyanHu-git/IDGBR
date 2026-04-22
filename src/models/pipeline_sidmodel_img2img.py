@@ -736,6 +736,7 @@ class StableDiffusionSIDModelImg2ImgPipeline(
         prompt: Union[str, List[str]] = None,
         image: PipelineImageInput = None,
         rough_label: PipelineImageInput = None,
+        use_rough_guidance: bool = True,
         interact_direction: str = "seg",
         height: Optional[int] = None,
         width: Optional[int] = None,
@@ -932,17 +933,6 @@ class StableDiffusionSIDModelImg2ImgPipeline(
                 f"Image size {(height, width)} must be divisible by the VAE scale factor {self.vae_scale_factor}."
             )
         
-        rough_label = rough_label.to(device=device)
-        if tuple(rough_label.shape[-2:]) != (height, width):
-            raise ValueError(
-                f"Rough label tensor shape {tuple(rough_label.shape[-2:])} does not match image size {(height, width)}."
-            )
-        rough_label_embed = self.label_embed_net.encode(rough_label)
-
-        rough_lbl_latents = self.vae.encode(
-            rough_label_embed
-                ).latent_dist.sample()* self.vae.config.scaling_factor
-
         # 5. Prepare timesteps
         self.scheduler.set_timesteps(num_inference_steps, device=device)
         self.scheduler.config.prediction_type = "epsilon"
@@ -955,6 +945,17 @@ class StableDiffusionSIDModelImg2ImgPipeline(
         # 6. Prepare latent variables
         cond_latents = self.vae.encode(image).latent_dist.sample()
         cond_latents = cond_latents * self.vae.config.scaling_factor
+        if use_rough_guidance:
+            rough_label = rough_label.to(device=device)
+            if tuple(rough_label.shape[-2:]) != (height, width):
+                raise ValueError(
+                    f"Rough label tensor shape {tuple(rough_label.shape[-2:])} does not match image size {(height, width)}."
+                )
+            rough_label_embed = self.label_embed_net.encode(rough_label)
+            rough_lbl_latents = self.vae.encode(rough_label_embed).latent_dist.sample()
+            rough_lbl_latents = rough_lbl_latents * self.vae.config.scaling_factor
+        else:
+            rough_lbl_latents = torch.zeros_like(cond_latents)
 
         # num_channels_latents = sidmodel.interact_net.num_classes
         num_channels_latents = 4
