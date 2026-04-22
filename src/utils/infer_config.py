@@ -3,27 +3,6 @@ import os
 
 from src.utils.config_parser import ConfigLoader
 
-
-_PATH_KEYS = {
-    "model_path",
-    "base_model_name_or_path",
-    "label_embed_dir",
-    "data_dir",
-    "dataset",
-    "output_dir",
-}
-
-
-def _resolve_relative_paths(cfg, config_file_path):
-    config_dir = os.path.dirname(os.path.abspath(config_file_path))
-    resolved = dict(cfg)
-    for key in _PATH_KEYS:
-        value = resolved.get(key)
-        if isinstance(value, str) and value and not os.path.isabs(value):
-            resolved[key] = os.path.normpath(os.path.join(config_dir, value))
-    return resolved
-
-
 def _normalize_checkpoint(value):
     if value is None:
         return None
@@ -55,7 +34,6 @@ def parse_infer_args(input_args=None):
     cfg_defaults = {}
     if pre_args.config_file:
         cfg_defaults = ConfigLoader.load_recursive(pre_args.config_file)
-        cfg_defaults = _resolve_relative_paths(cfg_defaults, pre_args.config_file)
 
     parser = argparse.ArgumentParser(description="IDGBR inference")
     parser.add_argument("--config_file", type=str, default=None, help="Path to yaml config file")
@@ -76,12 +54,14 @@ def parse_infer_args(input_args=None):
     parser.add_argument("--negative_prompt", type=str, default=None, help="Negative prompt")
     parser.add_argument("--use_dataset_text", dest="use_dataset_text", action="store_true", help="Use text from dataset metadata")
     parser.add_argument("--no_use_dataset_text", dest="use_dataset_text", action="store_false", help="Ignore text from dataset metadata")
+    parser.add_argument("--use_rough_guidance", dest="use_rough_guidance", action="store_true", help="Use rough label guidance")
+    parser.add_argument("--no_use_rough_guidance", dest="use_rough_guidance", action="store_false", help="Disable rough label guidance")
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
     parser.add_argument("--deterministic", action="store_true", help="Enable deterministic inference")
     parser.add_argument("--max_samples", type=int, default=None, help="Optional sample cap for quick runs")
     parser.add_argument("--skip_existing", dest="skip_existing", action="store_true", help="Skip predictions that already exist")
     parser.add_argument("--no_skip_existing", dest="skip_existing", action="store_false", help="Always overwrite predictions")
-    parser.set_defaults(use_dataset_text=True, skip_existing=True, deterministic=True)
+    parser.set_defaults(use_dataset_text=True, use_rough_guidance=True, skip_existing=True, deterministic=True)
 
     if cfg_defaults:
         parser.set_defaults(**cfg_defaults)
